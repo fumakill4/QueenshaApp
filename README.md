@@ -1,41 +1,18 @@
-# 🛒 Toko Queensha App
+# 🛒 Queensha App
 
-Toko Queensha App adalah aplikasi Kasir dan Point of Sales (POS) cerdas yang dirancang khusus untuk memenuhi kebutuhan manajerial dan transaksi harian toko dengan arsitektur **100% Offline-First**.
+Queensha App is a smart Cashier and Point of Sales (POS) application designed specifically for daily store transactions and managerial needs, built on a **100% Offline-First** architecture.
 
-Aplikasi ini memastikan operasional toko tidak akan pernah terhenti meskipun koneksi internet terputus, sekaligus menjamin keamanan dan keutuhan data melalui sistem pencadangan otomatis (Auto-Backup) multi-kanal.
+The app ensures store operations never come to a halt even when internet connectivity is lost, while guaranteeing data security and integrity through an automated multi-channel Auto-Backup system.
 
-## ✨ Fitur Unggulan
+## ✨ Key Features
 
-- 📶 **Arsitektur Offline-First**: Tetap bisa berjualan, menambah produk, dan mengubah stok tanpa koneksi internet. Semua perubahan disimpan di dalam *cache* pintar dan akan disinkronisasi ke server pusat (Firebase) diam-diam saat internet kembali menyala.
+- 📶 **Offline-First Architecture**: Keep selling, adding products, and updating stock without an internet connection. All changes are saved in a smart local cache and silently synced to the central server (Firebase) once connectivity is restored.
 - 🔐 **Multi-Channel Backup**:
-  - **Firebase Cloud Sync**: Penyimpanan data secara aman ke server *cloud* Google.
-  - **Lokal & Ekspor Excel**: Rekapitulasi laporan transaksi dan produk otomatis menjadi file `.xlsx`.
-  - **Google Drive Auto-Backup**: Fitur sinkronisasi latar belakang pintar yang mengamankan keseluruhan data transaksi dan stok toko langsung ke akun Google Drive pemilik secara otomatis.
-- 📱 **Sistem Kasir (POS)**: Antarmuka kasir yang responsif dan dirancang untuk transaksi super cepat.
-- 📦 **Manajemen Stok Otomatis**: Pemantauan inventaris barang secara cerdas dengan pencatatan riwayat masuk/keluar.
+  - **Firebase Cloud Sync**: Secure data storage to Google's cloud server.
+  - **Local & Excel Export**: Automatic transaction and product report exports as `.xlsx` files.
+  - **Google Drive Auto-Backup**: A smart background sync feature that automatically backs up all transaction and inventory data directly to the store owner's Google Drive account.
+- 📱 **Cashier System (POS)**: A responsive cashier interface designed for ultra-fast transactions.
+- 📦 **Automated Stock Management**: Intelligent inventory monitoring with a complete stock-in/stock-out history log.
 
-## 🛠️ Teknologi Utama
+## 🛠️ Tech Stack
 
-- **Frontend**: React Native & Expo (Cross-Platform Mobile App)
-- **Backend & Autentikasi**: Firebase (Auth, Firestore, Cloud Storage)
-- **Sistem Offline**: Custom *Sync Engine* dengan `@react-native-async-storage/async-storage`
-- **Integrasi Keamanan**: `@react-native-google-signin/google-signin` (Google Drive OAuth)
-
-## 🚀 Panduan Pengembangan
-
-1. *Clone repository* ini ke komputer lokal Anda.
-2. Lakukan instalasi paket dependensi dengan perintah `npm install`.
-3. Buat file `.env` di dalam *root* proyek dan masukkan konfigurasi kunci Firebase Anda:
-   ```env
-   EXPO_PUBLIC_FIREBASE_API_KEY=your_api_key
-   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
-   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
-   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
-   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
-   EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
-   ```
-4. Tambahkan file rahasia `google-services.json` Anda yang diunduh dari Firebase Console.
-5. Jalankan `npx expo start` untuk mulai menguji aplikasi di simulator atau perangkat nyata.
-
----
-*Aplikasi ini dikembangkan secara tertutup (*private*) khusus untuk mendukung operasional Toko Queensha secara profesional.*
