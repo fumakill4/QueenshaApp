@@ -153,7 +153,7 @@ export default function PosScreen({ navigation }) {
       const user = auth.currentUser;
       if (user) {
         setUserEmail(user.email || '');
-        if (user.email === 'chris@tambayong.com') {
+        if ((await user.getIdTokenResult()).claims.queenshaAdmin === true) {
           setUserRoleLabel('Master App');
         } else {
           const docRef = doc(db, 'profiles', user.uid);
@@ -447,7 +447,7 @@ export default function PosScreen({ navigation }) {
               <Image 
                 source={
                   userRoleLabel === 'Master App' 
-                    ? require('../../assets/master.jpg') 
+                    ? require('../../assets/logo.png')
                     : userRoleLabel === 'Owner'
                       ? require('../../assets/owner.jpg')
                       : require('../../assets/kasir.jpg')
@@ -832,10 +832,9 @@ export default function PosScreen({ navigation }) {
             <Text style={{color: '#6B7280', marginBottom: 16}}>Minta pelanggan scan QR Code di bawah</Text>
             
             <View style={styles.qrCodeContainer}>
-              <Image 
-                source={require('../../assets/qris.png')} 
-                style={{width: 200, height: 200}} 
-              />
+              {process.env.EXPO_PUBLIC_PAYMENT_QR_URL ? (
+                <Image source={{ uri: process.env.EXPO_PUBLIC_PAYMENT_QR_URL }} style={{width: 200, height: 200}} />
+              ) : <Text>QRIS belum dikonfigurasi. Gunakan metode pembayaran lain.</Text>}
             </View>
 
             <Text style={styles.modalTotalValue}>Rp {totalCart.toLocaleString('id-ID')}</Text>
@@ -936,7 +935,7 @@ export default function PosScreen({ navigation }) {
               <Image 
                 source={
                   userRoleLabel === 'Master App' 
-                    ? require('../../assets/master.jpg') 
+                    ? require('../../assets/logo.png')
                     : userRoleLabel === 'Owner'
                       ? require('../../assets/owner.jpg')
                       : require('../../assets/kasir.jpg')

@@ -1,4 +1,4 @@
-// This App was build by Chris Tambayong - Fumakill4
+// This App was build by i729 - Fumakill4
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Alert, StatusBar, Dimensions } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -88,8 +88,8 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        await checkRole(user);
-        setSession({ user });
+        const approved = await checkRole(user);
+        setSession(approved ? { user } : null);
       } else {
         setSession(null);
         setRole('kasir');
@@ -103,25 +103,33 @@ export default function App() {
 
   const checkRole = async (user) => {
     if (user) {
-      if (user.email === 'chris@tambayong.com') {
-        setRole('master');
-        setPermissions(['menu_stok', 'menu_users', 'menu_history']);
-        return;
-      }
 
       try {
+        const token = await user.getIdTokenResult(true);
+        if (token.claims.queenshaAdmin !== true && token.claims.queenshaStaff !== true) {
+          Alert.alert('Akses Ditolak', 'Akun menunggu persetujuan administrator.');
+          await signOut(auth);
+          return;
+        }
         const docRef = doc(db, 'profiles', user.uid);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setRole(data.role || 'kasir');
+          if (!['master', 'owner', 'asisten', 'staff', 'kasir'].includes(data.role)) {
+            Alert.alert('Akses Ditolak', 'Akun menunggu persetujuan administrator.');
+            await signOut(auth);
+            return;
+          }
+          setRole(data.role);
           setPermissions(data.permissions || []);
+          return true;
         } else {
           Alert.alert('Akses Ditolak', 'Akun Anda tidak aktif atau telah dihapus.');
           await signOut(auth);
         }
       } catch (error) {
-        console.error('Error fetching role:', error);
+        await signOut(auth);
+        Alert.alert('Akses Ditolak', 'Identitas akun tidak dapat diverifikasi.');
       }
     }
   };

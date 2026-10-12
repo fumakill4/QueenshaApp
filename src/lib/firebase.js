@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, deleteApp } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
@@ -28,3 +28,15 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 export { auth, db, storage, app };
+
+// Created by i729: create another account without replacing the approver's session.
+export async function createManagedAccount(email, password) {
+  const name = `account-provision-${Date.now()}`;
+  const secondary = initializeApp(app.options, name);
+  try {
+    const { createUserWithEmailAndPassword } = await import('firebase/auth');
+    return await createUserWithEmailAndPassword(getAuth(secondary), email, password);
+  } finally {
+    await deleteApp(secondary);
+  }
+}

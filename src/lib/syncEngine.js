@@ -1,40 +1,49 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { db } from './firebase';
+import { db, auth } from './firebase';
 import { collection, addDoc, doc, updateDoc, deleteDoc, getDoc, setDoc, getDocs } from 'firebase/firestore';
 
 const QUEUE_KEY = 'OFFLINE_SYNC_QUEUE';
+export function scopedStorageKey(key, uid = auth.currentUser?.uid) {
+  if (!uid) throw new Error('Authenticated account required for local data');
+  return `account:${uid}:${key}`;
+}
+
 
 export const fetchCollectionData = async (collectionName, customQuery = null) => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return [];
   try {
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected) {
       console.log(`[Offline] Loading ${collectionName} from cache`);
-      return (await getCachedData(collectionName.toUpperCase())) || [];
+      return (await getCachedData(collectionName.toUpperCase(), uid)) || [];
     }
     
     const q = customQuery || collection(db, collectionName);
     const snap = await getDocs(q);
     const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    await cacheData(collectionName.toUpperCase(), data);
+    if (auth.currentUser?.uid !== uid) return [];
+    await cacheData(collectionName.toUpperCase(), data, uid);
     return data;
   } catch (error) {
+    if (auth.currentUser?.uid !== uid || ['permission-denied', 'unauthenticated'].includes(error.code)) return [];
     console.log(`[Error] Fetching ${collectionName}, falling back to cache.`, error);
-    return (await getCachedData(collectionName.toUpperCase())) || [];
+    return (await getCachedData(collectionName.toUpperCase(), uid)) || [];
   }
 };
 
-export const cacheData = async (key, data) => {
+export const cacheData = async (key, data, uid = auth.currentUser?.uid) => {
   try {
-    await AsyncStorage.setItem(key, JSON.stringify(data));
+    await AsyncStorage.setItem(scopedStorageKey(key, uid), JSON.stringify(data));
   } catch (error) {
     console.error(`Error caching ${key}:`, error);
   }
 };
 
-export const getCachedData = async (key) => {
+export const getCachedData = async (key, uid = auth.currentUser?.uid) => {
   try {
-    const data = await AsyncStorage.getItem(key);
+    const data = await AsyncStorage.getItem(scopedStorageKey(key, uid));
     return data ? JSON.parse(data) : null;
   } catch (error) {
     console.error(`Error getting cached ${key}:`, error);
@@ -43,8 +52,9 @@ export const getCachedData = async (key) => {
 };
 
 export const addOfflineAction = async (type, payload) => {
+  const queueKey = scopedStorageKey(QUEUE_KEY);
   try {
-    const currentQueueStr = await AsyncStorage.getItem(QUEUE_KEY);
+    const currentQueueStr = await AsyncStorage.getItem(queueKey);
     const queue = currentQueueStr ? JSON.parse(currentQueueStr) : [];
     
     queue.push({
@@ -54,7 +64,7 @@ export const addOfflineAction = async (type, payload) => {
       timestamp: new Date().toISOString()
     });
     
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+    await AsyncStorage.setItem(queueKey, JSON.stringify(queue));
     console.log(`[SyncEngine] Action ${type} added to offline queue.`);
   } catch (error) {
     console.error('[SyncEngine] Error adding to offline queue:', error);
@@ -62,6 +72,9 @@ export const addOfflineAction = async (type, payload) => {
 };
 
 export const processSyncQueue = async () => {
+  const uid = auth.currentUser?.uid;
+  if (!uid) return;
+  const queueKey = scopedStorageKey(QUEUE_KEY, uid);
   try {
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected) {
@@ -69,7 +82,7 @@ export const processSyncQueue = async () => {
       return;
     }
 
-    const currentQueueStr = await AsyncStorage.getItem(QUEUE_KEY);
+    const currentQueueStr = await AsyncStorage.getItem(queueKey);
     const queue = currentQueueStr ? JSON.parse(currentQueueStr) : [];
     
     if (queue.length === 0) return;
@@ -79,6 +92,7 @@ export const processSyncQueue = async () => {
     const remainingQueue = [];
 
     for (const action of queue) {
+      if (auth.currentUser?.uid !== uid) return;
       try {
         if (action.type === 'NEW_TRANSACTION') {
           const { trxData, items } = action.payload;
@@ -136,7 +150,7 @@ export const processSyncQueue = async () => {
       }
     }
 
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(remainingQueue));
+    await AsyncStorage.setItem(queueKey, JSON.stringify(remainingQueue));
     console.log('[SyncEngine] Sync completed.');
 
   } catch (error) {

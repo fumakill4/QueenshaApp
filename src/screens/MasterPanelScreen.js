@@ -1,3 +1,4 @@
+import { createManagedAccount } from '../lib/firebase';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator, TextInput, Modal } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -26,7 +27,7 @@ export default function MasterPanelScreen({ navigation }) {
     }
     setIsSaving(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
+      const userCredential = await createManagedAccount(newEmail, newPassword);
       await setDoc(doc(db, 'profiles', userCredential.user.uid), {
         full_name: newName,
         role: 'owner',
