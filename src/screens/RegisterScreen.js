@@ -39,8 +39,8 @@ export default function RegisterScreen({ navigation }) {
         id: userCredential.user.uid,
         full_name: fullName,
         phone: phone,
-        role: 'owner',
-        permissions: ['menu_stok', 'menu_users', 'menu_history']
+        role: 'pending',
+        permissions: []
       });
 
       Alert.alert('Sukses', 'Akun berhasil dibuat!', [

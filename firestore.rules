@@ -1,0 +1,24 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() { return request.auth != null && request.auth.token.get('queenshaAdmin', false) == true; }
+    function isMember() { return isAdmin() || (request.auth != null && request.auth.token.get('queenshaStaff', false) == true); }
+    match /profiles/{uid} {
+      allow read: if isAdmin() || (request.auth != null && request.auth.uid == uid);
+      allow create: if isAdmin() || (request.auth != null && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['id', 'full_name', 'phone', 'role', 'permissions'])
+        && request.resource.data.role == 'pending' && request.resource.data.permissions.size() == 0);
+      allow update, delete: if isAdmin();
+    }
+    match /products/{id} { allow read: if isMember(); allow write: if isAdmin(); }
+    match /categories/{id} { allow read: if isMember(); allow write: if isAdmin(); }
+    match /transactions/{id} { allow read, create: if isMember(); allow update, delete: if isAdmin(); }
+    match /transaction_items/{id} { allow read, create: if isMember(); allow update, delete: if isAdmin(); }
+    match /audit_logs/{id} {
+      allow read: if isAdmin();
+      allow create: if request.auth != null && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

@@ -1,3 +1,4 @@
+import { createManagedAccount } from '../lib/firebase';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, SafeAreaView, Platform, StatusBar, Modal, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
@@ -34,7 +35,7 @@ export default function UsersScreen({ navigation }) {
   const fetchCurrentUserRole = async () => {
     const user = auth.currentUser;
     if (user) {
-      if (user.email === 'chris@tambayong.com') {
+      if ((await user.getIdTokenResult()).claims.queenshaAdmin === true) {
         setCurrentUserRole('master');
         return;
       }
@@ -75,11 +76,7 @@ export default function UsersScreen({ navigation }) {
         return;
       }
 
-      // Note: in client-side Firebase, creating a user signs them in.
-      // To avoid signing out the admin, normally a cloud function is used.
-      // For this migration, we will just create the user, which will sign out the master.
-      // After that, we insert the profile.
-      const userCredential = await createUserWithEmailAndPassword(auth, newEmail, newPassword);
+      const userCredential = await createManagedAccount(newEmail, newPassword);
       
       await setDoc(doc(db, 'profiles', userCredential.user.uid), {
         full_name: newName,
@@ -103,7 +100,7 @@ export default function UsersScreen({ navigation }) {
   };
 
   const handleDeleteUser = (user) => {
-    if (user.email === 'chris@tambayong.com' || user.role === 'master') {
+    if (user.role === 'master') {
       Alert.alert('Gagal', 'Akun master tidak dapat dihapus!');
       return;
     }

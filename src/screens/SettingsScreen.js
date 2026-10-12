@@ -92,8 +92,6 @@ export default function SettingsScreen({ navigation }) {
       if (docSnap.exists()) {
         currentRole = docSnap.data().role;
         currentPerms = docSnap.data().permissions || [];
-      } else if (user.email === 'chris@tambayong.com') {
-        currentRole = 'master';
       }
       setUserRole(currentRole);
       setPermissions(currentPerms);
@@ -306,13 +304,15 @@ export default function SettingsScreen({ navigation }) {
   };
 
   const handleOpenWA = () => {
-    Linking.openURL('whatsapp://send?phone=+628999787787').catch(() => {
+    if (!process.env.EXPO_PUBLIC_SUPPORT_PHONE) return Alert.alert('Kontak', 'Kontak dukungan belum dikonfigurasi.');
+    Linking.openURL(`whatsapp://send?phone=${encodeURIComponent(process.env.EXPO_PUBLIC_SUPPORT_PHONE || '')}`).catch(() => {
       Alert.alert('Error', 'Aplikasi WhatsApp tidak terinstall.');
     });
   };
 
   const handleOpenEmail = () => {
-    Linking.openURL('mailto:Chris@tambayong.com').catch(() => {
+    if (!process.env.EXPO_PUBLIC_SUPPORT_EMAIL) return Alert.alert('Kontak', 'Kontak dukungan belum dikonfigurasi.');
+    Linking.openURL(`mailto:${process.env.EXPO_PUBLIC_SUPPORT_EMAIL || ''}`).catch(() => {
       Alert.alert('Error', 'Tidak dapat membuka aplikasi email.');
     });
   };
@@ -328,8 +328,8 @@ export default function SettingsScreen({ navigation }) {
           <View style={styles.profileSection}>
             <Image 
               source={
-                userEmail === 'chris@tambayong.com'
-                  ? require('../../assets/master.jpg')
+                userRole === 'master'
+                  ? require('../../assets/logo.png')
                   : userRole === 'owner' || userRole === 'master'
                     ? require('../../assets/owner.jpg')
                     : require('../../assets/kasir.jpg')
@@ -338,7 +338,7 @@ export default function SettingsScreen({ navigation }) {
             />
             <View>
               <Text style={styles.profileEmail}>{userEmail}</Text>
-              <Text style={styles.profileRole}>Mode: {userEmail === 'chris@tambayong.com' ? 'MASTER APP' : userRole.toUpperCase() === 'STAFF' ? 'KASIR' : userRole.toUpperCase()}</Text>
+              <Text style={styles.profileRole}>Mode: {userRole === 'master' ? 'MASTER APP' : userRole.toUpperCase() === 'STAFF' ? 'KASIR' : userRole.toUpperCase()}</Text>
             </View>
           </View>
 
@@ -462,7 +462,7 @@ export default function SettingsScreen({ navigation }) {
         {/* FIXED FLOATING ROUNDED RECTANGLE FOOTER */}
         <View style={styles.floatingFooter}>
           <Text style={{ fontSize: 11, color: '#6B7280', marginBottom: 2 }}>
-            Designed by <Text style={{ fontWeight: 'bold', color: '#0284C7' }}>© Chris Tambayong</Text>
+            Designed by <Text style={{ fontWeight: 'bold', color: '#0284C7' }}>© i729</Text>
           </Text>
           <Text style={{ fontSize: 10, color: '#9CA3AF', marginBottom: 2 }}>
             Created for Toko Queensha™
@@ -492,7 +492,7 @@ export default function SettingsScreen({ navigation }) {
             </Text>
 
             <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 12 }}>
-              Aplikasi ini dikembangkan oleh <Text style={{ fontWeight: 'bold' }}>Chris Tambayong</Text>, seorang Web, iOS, dan Android Developer yang berfokus pada pembuatan solusi digital untuk kebutuhan bisnis. Dengan pengalaman dalam pengembangan website, aplikasi mobile, sistem kasir, dan platform digital custom, Chris membangun aplikasi yang tidak hanya terlihat modern, tetapi juga mudah digunakan dan sesuai dengan kebutuhan nyata di lapangan.
+              Aplikasi ini dikembangkan oleh <Text style={{ fontWeight: 'bold' }}>i729</Text>, seorang Web, iOS, dan Android Developer yang berfokus pada pembuatan solusi digital untuk kebutuhan bisnis. Dengan pengalaman dalam pengembangan website, aplikasi mobile, sistem kasir, dan platform digital custom, Chris membangun aplikasi yang tidak hanya terlihat modern, tetapi juga mudah digunakan dan sesuai dengan kebutuhan nyata di lapangan.
             </Text>
 
             <Text style={{ fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 16 }}>
@@ -511,7 +511,7 @@ export default function SettingsScreen({ navigation }) {
               
               <TouchableOpacity onPress={handleOpenEmail} style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Ionicons name="mail" size={20} color="#EF4444" style={{ marginRight: 8 }} />
-                <Text style={{ fontSize: 14, color: '#1D4ED8', fontWeight: 'bold', textDecorationLine: 'underline' }}>Chris@tambayong.com</Text>
+                <Text style={{ fontSize: 14, color: '#1D4ED8', fontWeight: 'bold', textDecorationLine: 'underline' }}>{process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'Support contact not configured'}</Text>
               </TouchableOpacity>
             </View>
 
